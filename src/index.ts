@@ -9,7 +9,7 @@ let patches: (() => void)[] = [];
 export default {
     name: "BypassPinPrompt",
     description: "Bypass the confirmation prompt when pinning or unpinning messages.",
-    authors: [{ name: "thororen (ported)" }],
+    authors: [{ name: "btmc727 (ported)" }],
 
     onLoad() {
         if (!MessageActions) return;
