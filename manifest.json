@@ -1,1 +1,1 @@
-{"name":"BypassPinPrompt","description":"Bypass the pin prompt when using the pin functions","authors":[{"name":"btmc727","id":"554071670143451176"}],"main":"index.js","vendetta":{"icon":"ic_badge_staff"},"hash":"7487e3a1bc0792e5aafe5d6667094e755ba3feb07edbee8bf746d380ba15e7ca"}
+{"name":"BypassPinPrompt","description":"Bypass the pin prompt when using the pin functions port from Equicord.","authors":[{"name":"btmc727","id":"554071670143451176"}],"main":"index.js","vendetta":{"icon":"ic_badge_staff"},"hash":"7487e3a1bc0792e5aafe5d6667094e755ba3feb07edbee8bf746d380ba15e7ca"}
