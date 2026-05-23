@@ -1,9 +1,7 @@
 import { findByProps } from "@vendetta/metro";
 import { instead } from "@vendetta/patcher";
 
-const MessageActions = findByProps("pinMessage", "unpinMessage");
-const ConfirmPin = findByProps("confirmPin");
-const ConfirmUnpin = findByProps("confirmUnpin");
+const Alerts = findByProps("alertWithButtons");
 
 let patches: (() => void)[] = [];
 
@@ -16,23 +14,20 @@ export default {
     ],
 
     onLoad() {
-        if (!MessageActions) return;
+        if (!Alerts) return;
 
-        if (ConfirmPin?.confirmPin) {
-            patches.push(
-                instead("confirmPin", ConfirmPin, ([channel, message]) => {
-                    MessageActions.pinMessage(channel, message.id);
-                })
-            );
-        }
-
-        if (ConfirmUnpin?.confirmUnpin) {
-            patches.push(
-                instead("confirmUnpin", ConfirmUnpin, ([channel, message]) => {
-                    MessageActions.unpinMessage(channel, message.id);
-                })
-            );
-        }
+        patches.push(
+            instead("alertWithButtons", Alerts, (args, orig) => {
+                const alert = args[0];
+                const buttons = args[1] ?? [];
+                const confirmButton = buttons.find((b: any) => b.style === "default" || b.preferred);
+                if (confirmButton?.onPress) {
+                    confirmButton.onPress();
+                    return;
+                }
+                return orig(...args);
+            })
+        );
     },
 
     onUnload() {
