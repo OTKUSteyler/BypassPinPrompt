@@ -2,7 +2,8 @@ import { findByProps } from "@vendetta/metro";
 import { instead } from "@vendetta/patcher";
 
 const MessageActions = findByProps("pinMessage", "unpinMessage");
-const PinConfirm = findByProps("confirmPin") ?? findByProps("confirmUnpin");
+const Alerts = findByProps("show", "close", "openLazy");
+const i18n = findByProps("Messages", "getLocale");
 
 let patches: (() => void)[] = [];
 
@@ -12,23 +13,24 @@ export default {
     authors: [{ name: "btmc727 (ported) (original) thororen" }],
 
     onLoad() {
-        if (!MessageActions) return;
+        if (!MessageActions || !Alerts) return;
 
-        if (PinConfirm?.confirmPin) {
-            patches.push(
-                instead("confirmPin", PinConfirm, ([channel, message]) => {
-                    MessageActions.pinMessage(channel, message.id);
-                })
-            );
-        }
+        patches.push(
+            instead("show", Alerts, (args, orig) => {
+                const alert = args[0];
+                const title: string = alert?.title ?? "";
 
-        if (PinConfirm?.confirmUnpin) {
-            patches.push(
-                instead("confirmUnpin", PinConfirm, ([channel, message]) => {
-                    MessageActions.unpinMessage(channel, message.id);
-                })
-            );
-        }
+                const pinTitle = i18n?.Messages?.PIN_MESSAGE ?? "Pin Message";
+                const unpinTitle = i18n?.Messages?.UNPIN_MESSAGE ?? "Unpin Message";
+
+                if (title === pinTitle || title === unpinTitle) {
+                    alert?.onConfirm?.();
+                    return;
+                }
+
+                return orig(...args);
+            })
+        );
     },
 
     onUnload() {
