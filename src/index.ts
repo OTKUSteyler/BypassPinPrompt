@@ -2,8 +2,6 @@ import { findByProps } from "@vendetta/metro";
 import { instead } from "@vendetta/patcher";
 
 const MessageActions = findByProps("pinMessage", "unpinMessage");
-const Alerts = findByProps("show", "close", "openLazy");
-const i18n = findByProps("Messages", "getLocale");
 
 let patches: (() => void)[] = [];
 
@@ -13,21 +11,16 @@ export default {
     authors: [{ name: "btmc727 (ported) (original) thororen" }],
 
     onLoad() {
-        if (!MessageActions || !Alerts) return;
+        if (!MessageActions) return;
 
         patches.push(
-            instead("show", Alerts, (args, orig) => {
-                const alert = args[0];
-                const title: string = alert?.title ?? "";
+            instead("pinMessage", MessageActions, (args, orig) => {
+                return orig(...args);
+            })
+        );
 
-                const pinTitle = i18n?.Messages?.PIN_MESSAGE ?? "Pin Message";
-                const unpinTitle = i18n?.Messages?.UNPIN_MESSAGE ?? "Unpin Message";
-
-                if (title === pinTitle || title === unpinTitle) {
-                    alert?.onConfirm?.();
-                    return;
-                }
-
+        patches.push(
+            instead("unpinMessage", MessageActions, (args, orig) => {
                 return orig(...args);
             })
         );
