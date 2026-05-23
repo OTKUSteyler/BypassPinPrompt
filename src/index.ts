@@ -1,7 +1,39 @@
 import { findByProps } from "@vendetta/metro";
 import { instead } from "@vendetta/patcher";
 
-const Alerts = findByProps("alertWithButtons");
+const MessageActions = findByProps("pinMessage", "unpinMessage");
+const Alerts = findByProps("show", "close", "openLazy");
+
+const PIN_TITLES = [
+    "Pin Message",
+    "Nachricht anpinnen",
+    "Épingler le message",
+    "Fijar mensaje",
+    "Fissa messaggio",
+    "Bericht vastmaken",
+    "Fixera meddelande",
+    "Fastgør besked",
+    "Fest melding",
+    "Kiinnitä viesti",
+    "Rögzítsd az üzenetet",
+    "Przypnij wiadomość",
+    "Fixar mensagem",
+    "Закрепить сообщение",
+    "メッセージをピン留め",
+    "固定消息",
+    "메시지 고정",
+    "Sabitle mesajı",
+    "Prikvači poruku",
+    "Prikvačite poruku",
+    "Mesajı Sabitle",
+    "Anexar mensagem",
+    "Pripnúť správu",
+    "Připnout zprávu",
+    "Закріпити повідомлення",
+    "ปักหมุดข้อความ",
+    "Ghim tin nhắn",
+    "Sematkan Pesan",
+];
 
 let patches: (() => void)[] = [];
 
@@ -14,17 +46,21 @@ export default {
     ],
 
     onLoad() {
-        if (!Alerts) return;
+        if (!MessageActions || !Alerts) return;
 
         patches.push(
-            instead("alertWithButtons", Alerts, (args, orig) => {
+            instead("show", Alerts, (args, orig) => {
                 const alert = args[0];
-                const buttons = args[1] ?? [];
-                const confirmButton = buttons.find((b: any) => b.style === "default" || b.preferred);
-                if (confirmButton?.onPress) {
-                    confirmButton.onPress();
+                const title: string = alert?.title ?? "";
+
+                if (PIN_TITLES.includes(title)) {
+                    const confirmAction = alert?.confirmText
+                        ? alert?.onConfirm ?? alert?.actions?.find((a: any) => a.preferred)?.onPress
+                        : null;
+                    confirmAction?.();
                     return;
                 }
+
                 return orig(...args);
             })
         );
