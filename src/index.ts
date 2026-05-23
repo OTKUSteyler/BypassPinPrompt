@@ -6,26 +6,32 @@ const MessageActions = findByProps("pinMessage", "unpinMessage");
 let patches: (() => void)[] = [];
 
 function findConfirmModule() {
-    const modules = window.modules ?? (globalThis as any).__r?.modules;
+    const modules = (globalThis as any).__r?.modules;
     if (!modules) return null;
 
     for (const id in modules) {
-        const mod = modules[id]?.publicModule?.exports;
-        if (!mod) continue;
-        for (const key of Object.keys(mod)) {
-            if (typeof mod[key] === "object" && mod[key] !== null) {
-                const sub = mod[key];
-                if (typeof sub.confirmPin === "function" || typeof sub.confirmUnpin === "function") {
-                    return sub;
-                }
+        try {
+            const mod = modules[id]?.publicModule?.exports;
+            if (!mod || typeof mod !== "object") continue;
+
+            const keys = Object.keys(mod).filter(k => typeof k === "string");
+            for (const key of keys) {
+                try {
+                    const val = mod[key];
+                    if (typeof val === "object" && val !== null) {
+                        if (typeof val.confirmPin === "function" || typeof val.confirmUnpin === "function") {
+                            return val;
+                        }
+                    }
+                    if (typeof val === "function") {
+                        const src = Function.prototype.toString.call(val);
+                        if (src.includes("confirmPin") || src.includes("confirmUnpin")) {
+                            return mod;
+                        }
+                    }
+                } catch {}
             }
-            if (typeof mod[key] === "function") {
-                const src = mod[key].toString();
-                if (src.includes("confirmPin") || src.includes("confirmUnpin")) {
-                    return mod;
-                }
-            }
-        }
+        } catch {}
     }
     return null;
 }
