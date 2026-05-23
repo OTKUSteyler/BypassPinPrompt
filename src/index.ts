@@ -2,39 +2,10 @@ import { findByProps } from "@vendetta/metro";
 import { instead } from "@vendetta/patcher";
 
 const MessageActions = findByProps("pinMessage", "unpinMessage");
+const ConfirmPin = findByProps("confirmPin");
+const ConfirmUnpin = findByProps("confirmUnpin");
 
 let patches: (() => void)[] = [];
-
-function findConfirmModule() {
-    const modules = (globalThis as any).__r?.modules;
-    if (!modules) return null;
-
-    for (const id in modules) {
-        try {
-            const mod = modules[id]?.publicModule?.exports;
-            if (!mod || typeof mod !== "object") continue;
-
-            const keys = Object.keys(mod).filter(k => typeof k === "string");
-            for (const key of keys) {
-                try {
-                    const val = mod[key];
-                    if (typeof val === "object" && val !== null) {
-                        if (typeof val.confirmPin === "function" || typeof val.confirmUnpin === "function") {
-                            return val;
-                        }
-                    }
-                    if (typeof val === "function") {
-                        const src = Function.prototype.toString.call(val);
-                        if (src.includes("confirmPin") || src.includes("confirmUnpin")) {
-                            return mod;
-                        }
-                    }
-                } catch {}
-            }
-        } catch {}
-    }
-    return null;
-}
 
 export default {
     name: "BypassPinPrompt",
@@ -47,20 +18,17 @@ export default {
     onLoad() {
         if (!MessageActions) return;
 
-        const confirmMod = findConfirmModule();
-        if (!confirmMod) return;
-
-        if (confirmMod.confirmPin) {
+        if (ConfirmPin?.confirmPin) {
             patches.push(
-                instead("confirmPin", confirmMod, ([channel, message]) => {
+                instead("confirmPin", ConfirmPin, ([channel, message]) => {
                     MessageActions.pinMessage(channel, message.id);
                 })
             );
         }
 
-        if (confirmMod.confirmUnpin) {
+        if (ConfirmUnpin?.confirmUnpin) {
             patches.push(
-                instead("confirmUnpin", confirmMod, ([channel, message]) => {
+                instead("confirmUnpin", ConfirmUnpin, ([channel, message]) => {
                     MessageActions.unpinMessage(channel, message.id);
                 })
             );
